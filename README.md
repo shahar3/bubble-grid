@@ -1,6 +1,7 @@
 <p align="center">
   <img src="assets/bubblegrid-logo.png" alt="BubbleGrid Logo" width="200">
 </p>
+
 # Bubble Grid
 
 A flexible stacked grid layout component for [Bubble Tea](https://github.com/charmbracelet/bubbletea) TUI applications.
