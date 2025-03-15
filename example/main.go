@@ -83,8 +83,7 @@ func GridWithFrameExample() {
 
 	// Add a simple item with a frame
 	g.AddItem(frame.NewFrame(SimpleItem{"Framed Item 2"}), grid.ItemOptions{
-		Column:         1,
-		ExpandVertical: true,
+		Column: 1,
 	})
 
 	// Add another framed item
@@ -105,6 +104,54 @@ func GridWithFrameExample() {
 	}
 }
 
+func GridWithExpandedFrameExample() {
+	// Create a new grid with 3 columns
+	g := grid.NewStackedGrid()
+
+	// Add a simple item with a frame
+	g.AddItem(frame.NewFrame(SimpleItem{"Framed Item 1"}), grid.ItemOptions{
+		Column: 0,
+	})
+
+	// Add a simple item with a frame
+	g.AddItem(frame.NewFrame(SimpleItem{"Framed Item 2"}), grid.ItemOptions{
+		Column:         1,
+		ExpandVertical: true,
+	})
+
+	// Add a framed item in the second row
+	g.AddItem(frame.NewFrame(SimpleItem{"Framed Item 3"}), grid.ItemOptions{
+		Column:         1,
+		ExpandVertical: true,
+	})
+
+	// Add an expanded framed item in the second row
+	g.AddItem(frame.NewFrame(SimpleItem{"Framed Item 4"}), grid.ItemOptions{
+		Column:         1,
+		ExpandVertical: false,
+	})
+
+	// Add another framed item
+	g.AddItem(frame.NewFrame(SimpleItem{"Framed Item 5"}), grid.ItemOptions{
+		Column: 2,
+	})
+
+	g.AddItem(frame.NewFrame(SimpleItem{"Framed Item 6"}), grid.ItemOptions{
+		Column: 2,
+	})
+
+	g.AddItem(frame.NewFrame(SimpleItem{"Framed Item 7"}), grid.ItemOptions{
+		Column: 2,
+	})
+
+	model := ExampleModel{grid: g}
+	p := tea.NewProgram(model, tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running program: %v", err)
+		os.Exit(1)
+	}
+}
+
 func main() {
-	GridWithFrameExample()
+	GridWithExpandedFrameExample()
 }

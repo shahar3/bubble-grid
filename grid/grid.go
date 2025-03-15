@@ -96,21 +96,59 @@ func (g *StackedGrid) RenderColumn(items []ItemWithOptions, colWidth int) string
 	renderedItems := make([]string, len(items))
 	// Check the grid options to see if we need to fit the column to the screen
 	if g.options.FitScreen {
-		// Calculate the height per item
-		heightPerItem := g.height / len(items)
-		// In case there is a remainder, add it to the last item
-		remainderHeight := g.height % len(items)
+		// count the number of items that have ExpandVertical set to true
+		expandingItems := 0
+		for _, item := range items {
+			if item.Options.ExpandVertical {
+				expandingItems++
+			}
+		}
+
+		var heightPerItem int
+		var heightPerExpandedItem int
+		var remainderHeight int
+		if expandingItems > 0 {
+			// If there are expanding items, we need to calculate the height per item
+			heightPerExpandedItem, remainderHeight = g.calculateHeightPerExpandedItem(items, expandingItems)
+			heightPerItem = 1
+		} else {
+			// Calculate the height per item
+			heightPerItem = g.height / len(items)
+		}
+
 		// Get the available height for each item
+		totalLines := 0
 		for i, item := range items {
 			if i == len(items)-1 {
-				heightPerItem += remainderHeight
+				if item.Options.ExpandVertical {
+					heightPerExpandedItem += remainderHeight
+				} else {
+					if heightPerItem > 1 {
+						remainderHeight := g.height % len(items)
+						heightPerItem += remainderHeight
+					} else {
+						heightPerItem = g.getItemNaturalHeight(item.Item) + remainderHeight
+					}
+				}
 			}
 
 			// Check if the item is a Frame using type assertion
 			if frame, ok := item.Item.(Sizer); ok {
-				renderedItems[i] = frame.SetSize(colWidth, heightPerItem).Render()
+				if item.Options.ExpandVertical {
+					renderedItems[i] = frame.SetSize(colWidth, heightPerExpandedItem).Render()
+					totalLines += heightPerExpandedItem
+				} else {
+					renderedItems[i] = frame.SetSize(colWidth, heightPerItem).Render()
+					totalLines += heightPerItem
+				}
 			} else {
-				renderedItems[i] = lipgloss.NewStyle().Height(heightPerItem).Width(colWidth).Render(item.Render())
+				if item.Options.ExpandVertical {
+					renderedItems[i] = lipgloss.NewStyle().Height(heightPerExpandedItem).Width(colWidth).Render(item.Render())
+					totalLines += heightPerExpandedItem
+				} else {
+					renderedItems[i] = lipgloss.NewStyle().Height(heightPerItem).Width(colWidth).Render(item.Render())
+					totalLines += heightPerItem
+				}
 			}
 		}
 
@@ -124,7 +162,26 @@ func (g *StackedGrid) RenderColumn(items []ItemWithOptions, colWidth int) string
 	return strings.Join(renderedItems, "\n")
 }
 
+// calculateHeightPerExpandedItem calculates the height per expanded item and the remainder height
+func (g *StackedGrid) calculateHeightPerExpandedItem(items []ItemWithOptions, expandingItems int) (int, int) {
+	// Get the natural height of all the items that are not expanding
+	naturalHeight := 0
+	for _, item := range items {
+		if !item.Options.ExpandVertical {
+			naturalHeight += g.getItemNaturalHeight(item)
+		}
+	}
+
+	return (g.height - naturalHeight) / expandingItems, (g.height - naturalHeight) % expandingItems
+}
+
 func (g *StackedGrid) SetSize(width, height int) {
 	g.width = width
 	g.height = height
+}
+
+func (g *StackedGrid) getItemNaturalHeight(item Item) int {
+	// Count the number of lines in the item's render
+	lines := strings.Split(item.Render(), "\n")
+	return len(lines)
 }
