@@ -6,9 +6,10 @@ A flexible stacked grid layout component for [Bubble Tea](https://github.com/cha
 
 - Create multi-column grid layouts
 - Stack items vertically within columns
-- Configure item placement and expansion
-- Support for nested grids
-- Scrollable content with viewport support
+- Automatic screen-fitting with `FitScreen` option
+- Frame component with borders and padding
+- Support for nested components
+- Implement your size-aware components through `Sizer` interface
 
 ## Installation
 
@@ -18,65 +19,86 @@ go get github.com/shahar3/bubble-grid
 
 ## Usage
 
-Here's a simple example of how to use the grid:
+Here's a simple example using the grid with frames:
 
 ```go
 package main
 
 import (
-    "github.com/shahar3/bubble-grid"
+    "github.com/shahar3/bubble-grid/grid"
+    "github.com/shahar3/bubble-grid/frame"
+    tea "github.com/charmbracelet/bubbletea"
 )
 
-// Create a component that implements GridItem
-type MyItem struct {
+// Create a component that implements grid.Item
+type SimpleItem struct {
     content string
 }
 
-func (m MyItem) Render() string {
-    return m.content
+func (s SimpleItem) Render() string {
+    return s.content
+}
+
+// Create a Bubble Tea model
+type ExampleModel struct {
+    grid *grid.StackedGrid
 }
 
 func main() {
-    // Create a new grid with 3 columns
-    g := grid.New(3)
+    // Create a new grid
+    g := grid.NewStackedGrid()
+
+    // Create items with frames
+    item1 := SimpleItem{"Item 1"}
+    framedItem1 := frame.NewFrame(item1)
 
     // Add items to the grid
-    g.AddItem(MyItem{"Item 1"}, grid.GridOptions{
+    g.AddItem(framedItem1, grid.ItemOptions{
         Column: 0,
-        ExpandVertical: false,
-        MinHeight: 1,
     })
 
-    // Add more items...
+    // Create and run the program
+    p := tea.NewProgram(ExampleModel{grid: g}, tea.WithAltScreen())
+    if _, err := p.Run(); err != nil {
+        panic(err)
+    }
 }
 ```
 
 ### Grid Options
 
-When adding items to the grid, you can specify the following options:
+When creating a grid, you can specify these options:
+
+- `FitScreen`: Whether the grid should automatically fit items to screen dimensions
+
+When adding items to the grid, you can specify:
 
 - `Column`: Which column to place the item in (0-based index)
-- `ExpandVertical`: Whether the item should expand to fill available vertical space
-- `MinHeight`: Minimum height for the item
-- `MaxHeight`: Maximum height for the item (0 means unlimited)
 
-### Nested Grids
+### Frame Component
 
-You can create nested grids by adding a grid as an item to another grid:
+The Frame component provides a bordered container for your content:
 
 ```go
-// Create main grid
-mainGrid := grid.New(2)
+// Basic frame
+frame := frame.NewFrame(content)
 
-// Create nested grid
-nestedGrid := grid.New(2)
-nestedGrid.AddItem(MyItem{"Nested 1"}, grid.GridOptions{...})
+// Customize frame
+frame = frame.ChangeBorderColor(lipgloss.Color("#874BFD"))
 
-// Add nested grid to main grid
-mainGrid.AddItem(nestedGrid, grid.GridOptions{
-    Column: 0,
-    ExpandVertical: true,
-})
+// Add to grid
+g.AddItem(frame, grid.ItemOptions{Column: 0})
+```
+
+### Size-Aware Components
+
+Components can implement the `Sizer` interface to handle their own sizing:
+
+```go
+type Sizer interface {
+    Item
+    SetSize(width, height int) Sizer
+}
 ```
 
 ## Contributing
