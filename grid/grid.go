@@ -132,6 +132,17 @@ func (g *StackedGrid) RenderColumn(items []ItemWithOptions, colWidth int) string
 				}
 			}
 
+			// Check if the item is a StackedGrid using type assertion
+			if stackedGrid, ok := item.Item.(*StackedGrid); ok {
+				if item.Options.ExpandVertical {
+					stackedGrid.SetSize(colWidth, heightPerExpandedItem)
+				} else {
+					stackedGrid.SetSize(colWidth, heightPerItem)
+				}
+				renderedItems[i] = stackedGrid.Render()
+				totalLines += heightPerItem
+			}
+
 			// Check if the item is a Frame using type assertion
 			if frame, ok := item.Item.(Sizer); ok {
 				if item.Options.ExpandVertical {

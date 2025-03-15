@@ -12,7 +12,7 @@ A flexible stacked grid layout component for [Bubble Tea](https://github.com/cha
 - Stack items vertically within columns
 - Automatic screen-fitting with `FitScreen` option
 - Frame component with borders and padding
-- Support for nested components
+- Support for nested components (and grids)
 - Implement your size-aware components through `Sizer` interface
 
 ## Installation
